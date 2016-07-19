@@ -1,12 +1,74 @@
-all: csiphash.lib
+all: csiphash.lib libed25519_ref10.lib libed25519_donna.lib libkeccak-tiny.lib
 
 CFLAGS = /O2 /MT /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
     /I ..\ext
 
 CSIPHASH_OBJECTS = csiphash.obj
 
+LIBED25519_REF10_OBJECTS = \
+	ed25519\ref10\fe_0.obj \
+	ed25519\ref10\fe_1.obj \
+	ed25519\ref10\fe_add.obj \
+	ed25519\ref10\fe_cmov.obj \
+	ed25519\ref10\fe_copy.obj \
+	ed25519\ref10\fe_frombytes.obj \
+	ed25519\ref10\fe_invert.obj \
+	ed25519\ref10\fe_isnegative.obj \
+	ed25519\ref10\fe_isnonzero.obj \
+	ed25519\ref10\fe_mul.obj \
+	ed25519\ref10\fe_neg.obj \
+	ed25519\ref10\fe_pow22523.obj \
+	ed25519\ref10\fe_sq.obj \
+	ed25519\ref10\fe_sq2.obj \
+	ed25519\ref10\fe_sub.obj \
+	ed25519\ref10\fe_tobytes.obj \
+	ed25519\ref10\ge_add.obj \
+	ed25519\ref10\ge_double_scalarmult.obj \
+	ed25519\ref10\ge_frombytes.obj \
+	ed25519\ref10\ge_madd.obj \
+	ed25519\ref10\ge_msub.obj \
+	ed25519\ref10\ge_p1p1_to_p2.obj \
+	ed25519\ref10\ge_p1p1_to_p3.obj \
+	ed25519\ref10\ge_p2_0.obj \
+	ed25519\ref10\ge_p2_dbl.obj \
+	ed25519\ref10\ge_p3_0.obj \
+	ed25519\ref10\ge_p3_dbl.obj \
+	ed25519\ref10\ge_p3_to_cached.obj \
+	ed25519\ref10\ge_p3_to_p2.obj \
+	ed25519\ref10\ge_p3_tobytes.obj \
+	ed25519\ref10\ge_precomp_0.obj \
+	ed25519\ref10\ge_scalarmult_base.obj \
+	ed25519\ref10\ge_sub.obj \
+	ed25519\ref10\ge_tobytes.obj \
+	ed25519\ref10\keypair.obj \
+	ed25519\ref10\open.obj \
+	ed25519\ref10\sc_muladd.obj \
+	ed25519\ref10\sc_reduce.obj \
+	ed25519\ref10\sign.obj \
+	ed25519\ref10\keyconv.obj \
+	ed25519\ref10\blinding.obj
+
+LIBED25519_DONNA_OBJECTS = ed25519_tor.obj
+
+LIBKECCAK_OBJECTS = keccak-tiny\keccak-tiny-unrolled.obj keccak-tiny\keccak-tiny.obj
+
+.c.obj:
+	$(CC) $(CFLAGS) /D inline=_inline /Fo$@ /c $<
+
+ed25519_tor.obj:
+	$(CC) $(CFLAGS) /D inline=_inline /D ED25519_CUSTOMRANDOM /D ED25519_SUFFIX=_donna /c ed25519/donna/ed25519_tor.c
+
 csiphash.lib: $(CSIPHASH_OBJECTS)
 	lib $(CSIPHASH_OBJECTS) $(CURVE25519_DONNA_OBJECTS) /out:csiphash.lib
+
+libed25519_ref10.lib: $(LIBED25519_REF10_OBJECTS)
+	lib $(LIBED25519_REF10_OBJECTS) /out:libed25519_ref10.lib
+
+libed25519_donna.lib: $(LIBED25519_DONNA_OBJECTS)
+	lib $(LIBED25519_DONNA_OBJECTS) /out:libed25519_donna.lib
+
+libkeccak-tiny.lib: $(LIBKECCAK_OBJECTS)
+	lib $(LIBKECCAK_OBJECTS) /out:libkeccak-tiny.lib
 
 clean:
 	del *.obj *.lib

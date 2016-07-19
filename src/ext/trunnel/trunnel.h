@@ -12,6 +12,12 @@
 #ifndef TRUNNEL_H_INCLUDED_
 #define TRUNNEL_H_INCLUDED_
 
+#ifdef _MSC_VER
+#include <Windows.h>
+typedef SIZE_T size_t;
+typedef SSIZE_T ssize_t;
+#endif
+
 #include <sys/types.h>
 
 /** Macro to declare a variable-length dynamically allocated array.  Trunnel

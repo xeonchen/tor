@@ -99,6 +99,8 @@
 #include "shared_random_state.h"
 #include "util.h"
 
+#include <inttypes.h>
+
 /* String prefix of shared random values in votes/consensuses. */
 static const char previous_srv_str[] = "shared-rand-previous-value";
 static const char current_srv_str[] = "shared-rand-current-value";

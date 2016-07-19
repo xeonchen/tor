@@ -1,7 +1,7 @@
 all: tor.exe
 
 CFLAGS = /O2 /MT /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
-    /I ..\ext
+    /I ..\ext /I ..\ext\trunnel /I ..\trunnel
 
 LIBS = ..\..\..\build-alpha\lib\libevent.lib \
  ..\..\..\build-alpha\lib\libcrypto.lib \
@@ -24,13 +24,13 @@ LIBTOR_OBJECTS = \
   circuituse.obj \
   command.obj \
   config.obj \
-  config_codedigest.obj \
   confparse.obj \
   connection.obj \
   connection_edge.obj \
   connection_or.obj \
   control.obj \
   cpuworker.obj \
+  dircollate.obj \
   directory.obj \
   dirserv.obj \
   dirvote.obj \
@@ -41,6 +41,7 @@ LIBTOR_OBJECTS = \
   entrynodes.obj \
   geoip.obj \
   hibernate.obj \
+  keypin.obj \
   main.obj \
   microdesc.obj \
   networkstatus.obj \
@@ -50,9 +51,11 @@ LIBTOR_OBJECTS = \
   onion_fast.obj \
   onion_ntor.obj \
   onion_tap.obj \
+  periodic.obj \
   policies.obj \
   reasons.obj \
   relay.obj \
+  rendcache.obj \
   rendclient.obj \
   rendcommon.obj \
   rendmid.obj \
@@ -60,19 +63,23 @@ LIBTOR_OBJECTS = \
   rephist.obj \
   replaycache.obj \
   router.obj \
+  routerkeys.obj \
   routerlist.obj \
   routerparse.obj \
   routerset.obj \
   scheduler.obj \
+  shared_random.obj \
+  shared_random_state.obj \
   statefile.obj \
   status.obj \
+  torcert.obj \
   transports.obj
 
 libtor.lib: $(LIBTOR_OBJECTS)
 	lib $(LIBTOR_OBJECTS) /out:$@
 
 tor.exe: libtor.lib tor_main.obj
-	$(CC) $(CFLAGS) $(LIBS) libtor.lib ..\common\*.lib ..\ext\*.lib tor_main.obj /Fe$@
+	$(CC) $(CFLAGS) $(LIBS) libtor.lib ..\common\*.lib ..\ext\*.lib ..\trunnel\*.lib tor_main.obj /Fe$@
 
 clean:
 	del $(LIBTOR_OBJECTS) tor_main.obj *.lib tor.exe

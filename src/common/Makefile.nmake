@@ -1,16 +1,19 @@
-all: libor.lib libor-crypto.lib libor-event.lib
+all: libor.lib libor-crypto.lib libor-event.lib libcurve25519-donna.lib
 
 CFLAGS = /O2 /MT /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
-    /I ..\ext
+    /I ..\ext /I ..\trunnel /I ..\ext\trunnel
 
-LIBOR_OBJECTS = address.obj backtrace.obj compat.obj container.obj di_ops.obj \
-	log.obj memarea.obj mempool.obj procmon.obj sandbox.obj util.obj \
-	util_codedigest.obj
+LIBOR_OBJECTS = address.obj backtrace.obj compat.obj compat_threads.obj \
+	compat_time.obj compat_winthreads.obj container.obj di_ops.obj log.obj \
+ 	memarea.obj procmon.obj pubsub.obj sandbox.obj util.obj util_bug.obj \
+ 	util_format.obj util_process.obj workqueue.obj
 
-LIBOR_CRYPTO_OBJECTS = aes.obj crypto.obj crypto_format.obj torgzip.obj tortls.obj \
-	crypto_curve25519.obj curve25519-donna.obj
+LIBOR_CRYPTO_OBJECTS = aes.obj crypto.obj crypto_pwbox.obj crypto_s2k.obj \
+	crypto_format.obj torgzip.obj tortls.obj crypto_curve25519.obj crypto_ed25519.obj
 
 LIBOR_EVENT_OBJECTS = compat_libevent.obj
+
+LIBCURVE25519_DONNA_OBJECTS = curve25519-donna.obj
 
 curve25519-donna.obj: ..\ext\curve25519_donna\curve25519-donna.c
 	$(CC) $(CFLAGS) /D inline=_inline /c ..\ext\curve25519_donna\curve25519-donna.c
@@ -21,8 +24,11 @@ libor.lib: $(LIBOR_OBJECTS)
 libor-crypto.lib: $(LIBOR_CRYPTO_OBJECTS)
 	lib $(LIBOR_CRYPTO_OBJECTS) /out:libor-crypto.lib
 
-libor-event.lib:  $(LIBOR_EVENT_OBJECTS)
+libor-event.lib: $(LIBOR_EVENT_OBJECTS)
 	lib $(LIBOR_EVENT_OBJECTS) /out:libor-event.lib
+
+libcurve25519-donna.lib: $(LIBCURVE25519_DONNA_OBJECTS)
+	lib $(LIBCURVE25519_DONNA_OBJECTS) /out:libcurve25519-donna.lib
 
 clean:
 	del *.obj *.lib libor*.lib

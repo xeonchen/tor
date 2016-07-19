@@ -19,6 +19,8 @@
 #include "router.h"
 #include "shared_random_state.h"
 
+#include <inttypes.h>
+
 /* Default filename of the shared random state on disk. */
 static const char default_fname[] = "sr-state";
 

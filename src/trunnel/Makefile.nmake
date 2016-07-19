@@ -1,0 +1,15 @@
+all: libor-trunnel.lib
+
+CFLAGS = /O2 /MT /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
+    /I ..\ext /I ..\ext\trunnel /I ..\trunnel
+
+LIBOR_TRUNNEL_OBJECTS = ed25519_cert.obj link_handshake.obj pwbox.obj trunnel.obj
+
+trunnel.obj: ..\ext\trunnel\trunnel.c
+  $(CC) $(CFLAGS) /D inline=_inline /c ..\ext\trunnel\trunnel.c
+
+libor-trunnel.lib: $(LIBOR_TRUNNEL_OBJECTS)
+	lib $(LIBOR_TRUNNEL_OBJECTS) /out:$@
+
+clean:
+	del *.obj *.lib

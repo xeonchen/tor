@@ -3,6 +3,8 @@ all:
 	$(MAKE) /F Makefile.nmake
 	cd ../../src/ext
 	$(MAKE) /F Makefile.nmake
+	cd ../../src/trunnel
+	$(MAKE) /F Makefile.nmake
 	cd ../../src/or
 	$(MAKE) /F Makefile.nmake
 	cd ../../src/test
@@ -12,6 +14,8 @@ clean:
 	cd src/common
 	$(MAKE) /F Makefile.nmake clean
 	cd ../../src/ext
+	$(MAKE) /F Makefile.nmake clean
+	cd ../../src/trunnel
 	$(MAKE) /F Makefile.nmake clean
 	cd ../../src/or
 	$(MAKE) /F Makefile.nmake clean
