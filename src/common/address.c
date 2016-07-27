@@ -148,6 +148,13 @@ tor_addr_make_af_unix(tor_addr_t *a)
   a->family = AF_UNIX;
 }
 
+static void
+tor_addr_make_af_namedpipe(tor_addr_t *a)
+{
+  memset(a, 0, sizeof(*a));
+  a->family = AF_NAMEDPIPE;
+}
+
 /** Set the tor_addr_t in <b>a</b> to contain the socket address contained in
  * <b>sa</b>.  IF <b>port_out</b> is non-NULL and <b>sa</b> contains a port,
  * set *<b>port_out</b> to that port. Return 0 on success and -1 on
@@ -174,6 +181,9 @@ tor_addr_from_sockaddr(tor_addr_t *a, const struct sockaddr *sa,
   } else if (sa->sa_family == AF_UNIX) {
     tor_addr_make_af_unix(a);
     return 0;
+  } else if (sa->sa_family == AF_NAMEDPIPE) {
+    tor_addr_make_af_namedpipe(a);
+    return 0;
   } else {
     tor_addr_make_unspec(a);
     return -1;
@@ -194,6 +204,12 @@ tor_sockaddr_to_str(const struct sockaddr *sa)
   if (sa->sa_family == AF_UNIX) {
     struct sockaddr_un *s_un = (struct sockaddr_un *)sa;
     tor_asprintf(&result, "unix:%s", s_un->sun_path);
+    return result;
+  }
+#else
+  log_err(LD_BUG, "[xeon] family=%d, AF_NAMEDPIPE=%d", sa->sa_family, AF_NAMEDPIPE);
+  if (sa->sa_family == AF_NAMEDPIPE) {
+    tor_asprintf(&result, "pipe:%s", sa->sa_data);
     return result;
   }
 #endif
@@ -455,6 +471,10 @@ tor_addr_to_str(char *dest, const tor_addr_t *addr, size_t len, int decorate)
       break;
     case AF_UNIX:
       tor_snprintf(dest, len, "AF_UNIX");
+      ptr = dest;
+      break;
+    case AF_NAMEDPIPE:
+      tor_snprintf(dest, len, "AF_NAMEDPIPE");
       ptr = dest;
       break;
     default:
@@ -877,6 +897,8 @@ tor_addr_is_null(const tor_addr_t *addr)
     case AF_INET:
       return (tor_addr_to_ipv4n(addr) == 0);
     case AF_UNIX:
+      return 1;
+    case AF_NAMEDPIPE:
       return 1;
     case AF_UNSPEC:
       return 1;

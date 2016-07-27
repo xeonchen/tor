@@ -3913,6 +3913,7 @@ test_config_parse_port_config__ports__no_ports_given(void *data)
   smartlist_clear(slout);
   ret = parse_port_config(slout, NULL, NULL, "DNS", 0, "/foo/bar/unixdomain",
                           42, CL_PORT_IS_UNIXSOCKET);
+  // TODO: add named pipe test
   tt_int_op(ret, OP_EQ, 0);
   tt_int_op(smartlist_len(slout), OP_EQ, 1);
   port_cfg = (port_cfg_t *)smartlist_get(slout, 0);
@@ -4384,6 +4385,7 @@ test_config_parse_port_config__ports__ports_given(void *data)
   config_port_valid = mock_config_line("DNSPort", "0");
   ret = parse_port_config(slout, config_port_valid, NULL, "DNS", 0,
                           "127.0.0.45", 0, CL_PORT_IS_UNIXSOCKET);
+  // TODO: add named pipe test
   tt_int_op(ret, OP_EQ, 0);
   tt_int_op(smartlist_len(slout), OP_EQ, 0);
 
@@ -4394,6 +4396,7 @@ test_config_parse_port_config__ports__ports_given(void *data)
   config_port_valid = mock_config_line("DNSPort", "something");
   ret = parse_port_config(slout, config_port_valid, NULL, "DNS", 0,
                           "127.0.0.45", 0, CL_PORT_IS_UNIXSOCKET);
+  // TODO: add named pipe test
   tt_int_op(ret, OP_EQ, 0);
   tt_int_op(smartlist_len(slout), OP_EQ, 1);
   port_cfg = (port_cfg_t *)smartlist_get(slout, 0);

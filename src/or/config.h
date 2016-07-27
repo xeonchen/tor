@@ -151,6 +151,7 @@ smartlist_t *get_options_for_server_transport(const char *transport);
 #define CL_PORT_TAKES_HOSTNAMES (1u<<5)
 #define CL_PORT_IS_UNIXSOCKET (1u<<6)
 #define CL_PORT_DFLT_GROUP_WRITABLE (1u<<7)
+#define CL_PORT_IS_NAMEDPIPE (1u<<8)
 
 STATIC int options_act(const or_options_t *old_options);
 #ifdef TOR_UNIT_TESTS

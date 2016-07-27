@@ -284,6 +284,8 @@ entry_connection_new(int type, int socket_family)
     entry_conn->entry_cfg.ipv6_traffic = 1;
   else if (socket_family == AF_UNIX)
     entry_conn->is_socks_socket = 1;
+  else if (socket_family == AF_NAMEDPIPE)
+    entry_conn->is_named_pipe = 1;
   return entry_conn;
 }
 
@@ -866,6 +868,31 @@ create_unix_sockaddr(const char *listenaddress, char **readable_address,
   *len_out = sizeof(struct sockaddr_un);
   return sockaddr;
 }
+#elif defined(_WIN32)
+
+static struct sockaddr *
+create_unix_sockaddr(const char *listenaddress, char **readable_address,
+                     socklen_t *len_out)
+{
+  struct sockaddr *addr = NULL;
+
+  addr = tor_malloc_zero(sizeof(struct sockaddr));
+  addr->sa_family = AF_NAMEDPIPE;
+  if (strlcpy(addr->sa_data, listenaddress, sizeof(addr->sa_data))
+      >= sizeof(addr->sa_data)) {
+    log_warn(LD_CONFIG, "named pipe '%s' is too long to fit.",
+             escaped(listenaddress));
+    tor_free(addr);
+    return NULL;
+  }
+
+  if (readable_address)
+    *readable_address = tor_strdup(listenaddress);
+
+  *len_out = sizeof(struct sockaddr);
+  return addr;
+}
+
 #else
 static struct sockaddr *
 create_unix_sockaddr(const char *listenaddress, char **readable_address,
@@ -1288,6 +1315,52 @@ connection_listener_new(const struct sockaddr *listensockaddr,
                tor_socket_strerror(tor_socket_errno(s)));
       goto err;
     }
+#elif defined(_WIN32)
+  } else if (listensockaddr->sa_family == AF_NAMEDPIPE) {
+    /* We want to start reading for both AF_NAMEDPIPE cases */
+
+#if 1 // xeon
+    start_reading = 1;
+
+    tor_assert(conn_listener_type_supports_af_unix(type));
+
+
+    log_notice(LD_NET, "Opening %s on %s",
+               conn_type_to_string(type), address);
+
+    tor_addr_make_unspec(&addr);
+
+    if (unlink(address) < 0 && errno != ENOENT) {
+      log_warn(LD_NET, "Could not unlink %s: %s", address,
+                       strerror(errno));
+      goto err;
+    }
+
+    s = tor_open_socket_nonblocking(AF_UNIX, SOCK_STREAM, 0);
+    if (! SOCKET_OK(s)) {
+      int e = tor_socket_errno(s);
+      if (ERRNO_IS_RESOURCE_LIMIT(e)) {
+        warn_too_many_conns();
+      } else {
+        log_warn(LD_NET,"Socket creation failed: %s.", strerror(e));
+      }
+      goto err;
+    }
+
+    if (bind(s, listensockaddr,
+             (socklen_t)sizeof(struct sockaddr)) == -1) {
+      log_warn(LD_NET,"Bind to %s failed: %s.", address,
+               tor_socket_strerror(tor_socket_errno(s)));
+      goto err;
+    }
+
+    if (listen(s, SOMAXCONN) < 0) {
+      log_warn(LD_NET, "Could not listen on %s: %s", address,
+               tor_socket_strerror(tor_socket_errno(s)));
+      goto err;
+    }
+#endif /* 0 */
+
 #endif /* HAVE_SYS_UN_H */
   } else {
     log_err(LD_BUG, "Got unexpected address family %d.",

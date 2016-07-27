@@ -68,6 +68,9 @@
 /* Prefix used to indicate a Unix socket in a FooPort configuration. */
 static const char unix_socket_prefix[] = "unix:";
 
+/* Prefix used to indicate a named pipe in a FooPort configuration. */
+static const char named_pipe_prefix[] = "pipe:";
+
 /** A list of abbreviations and aliases to map command-line options, obsolete
  * option names, or alternative option names, to their current values. */
 static config_abbrev_t option_abbrevs_[] = {
@@ -1166,19 +1169,11 @@ options_act_reversible(const or_options_t *old_options, char **msg)
   sd_notifyf(0, "MAINPID=%ld\n", (long int)getpid());
 #endif
 
-#ifndef HAVE_SYS_UN_H
-  if (options->ControlSocket || options->ControlSocketsGroupWritable) {
-    *msg = tor_strdup("Unix domain sockets (ControlSocket) not supported "
-                      "on this OS/with this build.");
-    goto rollback;
-  }
-#else
   if (options->ControlSocketsGroupWritable && !options->ControlSocket) {
     *msg = tor_strdup("Setting ControlSocketGroupWritable without setting"
                       "a ControlSocket makes no sense.");
     goto rollback;
   }
-#endif
 
   if (running_tor) {
     int n_ports=0;
@@ -6157,14 +6152,39 @@ config_parse_unix_port(const char *addrport, char **path_out)
 
 #else /* defined(HAVE_SYS_UN_H) */
 
+#ifdef _WIN32
+
 int
 config_parse_unix_port(const char *addrport, char **path_out)
 {
   tor_assert(path_out);
   tor_assert(addrport);
 
-  if (strcmpstart(addrport, unix_socket_prefix)) {
-    /* Not a Unix socket path. */
+  if (strcmpstart(addrport, named_pipe_prefix)) {
+    /* Not a named pipe path. */
+    return -ENOENT;
+  }
+
+  if (strlen(addrport + strlen(named_pipe_prefix)) == 0) {
+    /* Empty socket path, not very usable. */
+    return -EINVAL;
+  }
+
+  *path_out = tor_strdup(addrport + strlen(named_pipe_prefix));
+  return 0;
+}
+
+#else /* defined(_WIN32) */
+
+int
+config_parse_unix_port(const char *addrport, char **path_out)
+{
+  tor_assert(path_out);
+  tor_assert(addrport);
+
+  if (strcmpstart(addrport, unix_socket_prefix) ||
+      strcmpstart(addrport, named_pipe_prefix)) {
+    /* Not a Unix socket path nor a named pipe path. */
     return -ENOENT;
   }
 
@@ -6174,6 +6194,8 @@ config_parse_unix_port(const char *addrport, char **path_out)
            escaped(addrport));
   return -ENOSYS;
 }
+
+#endif /* defined(_WIN32) */
 #endif /* defined(HAVE_SYS_UN_H) */
 
 static void
@@ -6252,6 +6274,7 @@ parse_port_config(smartlist_t *out,
     flags & CL_PORT_ALLOW_EXTRA_LISTENADDR;
   const unsigned takes_hostnames = flags & CL_PORT_TAKES_HOSTNAMES;
   const unsigned is_unix_socket = flags & CL_PORT_IS_UNIXSOCKET;
+  const unsigned is_named_pipe = flags & CL_PORT_IS_NAMEDPIPE;
   int got_zero_port=0, got_nonzero_port=0;
   char *unix_socket_path = NULL;
 
@@ -6335,19 +6358,23 @@ parse_port_config(smartlist_t *out,
    * one. */
   if (! ports) {
     if (defaultport && defaultaddr && out) {
-      port_cfg_t *cfg = port_cfg_new(is_unix_socket ? strlen(defaultaddr) : 0);
-       cfg->type = listener_type;
-       if (is_unix_socket) {
-         tor_addr_make_unspec(&cfg->addr);
-         memcpy(cfg->unix_addr, defaultaddr, strlen(defaultaddr) + 1);
-         cfg->is_unix_addr = 1;
-       } else {
-         cfg->port = defaultport;
-         tor_addr_parse(&cfg->addr, defaultaddr);
-       }
-       cfg->entry_cfg.session_group = SESSION_GROUP_UNSET;
-       cfg->entry_cfg.isolation_flags = ISO_DEFAULT;
-       smartlist_add(out, cfg);
+      port_cfg_t *cfg = port_cfg_new(is_unix_socket || is_named_pipe ? strlen(defaultaddr) : 0);
+      cfg->type = listener_type;
+      if (is_unix_socket) {
+        tor_addr_make_unspec(&cfg->addr);
+        memcpy(cfg->unix_addr, defaultaddr, strlen(defaultaddr) + 1);
+        cfg->is_unix_addr = 1;
+      } else if (is_named_pipe) {
+        tor_addr_make_unspec(&cfg->addr);
+        memcpy(cfg->pipe_addr, defaultaddr, strlen(defaultaddr) + 1);
+        cfg->is_named_pipe = 1;
+      } else {
+        cfg->port = defaultport;
+        tor_addr_parse(&cfg->addr, defaultaddr);
+      }
+      cfg->entry_cfg.session_group = SESSION_GROUP_UNSET;
+      cfg->entry_cfg.isolation_flags = ISO_DEFAULT;
+      smartlist_add(out, cfg);
     }
     return 0;
   }
@@ -6387,6 +6414,7 @@ parse_port_config(smartlist_t *out,
     addrport = smartlist_get(elts, 0);
 
     /* Let's start to check if it's a Unix socket path. */
+    // xeon: bookmark
     ret = config_parse_unix_port(addrport, &unix_socket_path);
     if (ret < 0 && ret != -ENOENT) {
       if (ret == -EINVAL) {

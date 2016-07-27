@@ -1671,6 +1671,9 @@ typedef struct entry_connection_t {
 
   /** Are we a socks SocksSocket listener? */
   unsigned int is_socks_socket:1;
+
+  /** Are we a named pipe listener? */
+  unsigned int is_named_pipe:1;
 } entry_connection_t;
 
 typedef enum {
@@ -3425,6 +3428,7 @@ typedef struct port_cfg_t {
              * own port. */
   uint8_t type; /**< One of CONN_TYPE_*_LISTENER */
   unsigned is_unix_addr : 1; /**< True iff this is an AF_UNIX address. */
+  unsigned is_named_pipe : 1;
 
   unsigned is_group_writable : 1;
   unsigned is_world_writable : 1;
@@ -3437,6 +3441,7 @@ typedef struct port_cfg_t {
   /* Unix sockets only: */
   /** Path for an AF_UNIX address */
   char unix_addr[FLEXIBLE_ARRAY_MEMBER];
+  char pipe_addr[FLEXIBLE_ARRAY_MEMBER];
 } port_cfg_t;
 
 /** Ordinary configuration line. */
