@@ -1,6 +1,6 @@
 all: libor.lib libor-crypto.lib libor-event.lib libcurve25519-donna.lib
 
-CFLAGS = /O2 /MT /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
+CFLAGS = /Od /Ob /MT /Zi /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
     /I ..\ext /I ..\trunnel /I ..\ext\trunnel
 
 LIBOR_OBJECTS = address.obj backtrace.obj compat.obj compat_threads.obj \

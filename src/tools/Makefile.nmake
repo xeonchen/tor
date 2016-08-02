@@ -1,6 +1,6 @@
 all: tor-resolve.exe tor-gencert.exe
 
-CFLAGS = /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common /I ..\or
+CFLAGS = /Od /Ob /Zi /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common /I ..\or
 
 LIBS = ..\..\..\build-alpha\lib\libevent.lib \
  ..\..\..\build-alpha\lib\libcrypto.lib \

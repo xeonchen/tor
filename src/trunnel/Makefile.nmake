@@ -1,6 +1,6 @@
 all: libor-trunnel.lib
 
-CFLAGS = /O2 /MT /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
+CFLAGS = /Od /Ob /MT /Zi /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
     /I ..\ext /I ..\ext\trunnel /I ..\trunnel
 
 LIBOR_TRUNNEL_OBJECTS = ed25519_cert.obj link_handshake.obj pwbox.obj trunnel.obj

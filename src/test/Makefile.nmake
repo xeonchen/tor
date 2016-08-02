@@ -1,6 +1,6 @@
 all: test.exe test-child.exe bench.exe
 
-CFLAGS = /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common /I ..\or \
+CFLAGS = /Od /Ob /Zi /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common /I ..\or \
     /I ..\ext
 
 LIBS = ..\..\..\build-alpha\lib\libevent.lib \

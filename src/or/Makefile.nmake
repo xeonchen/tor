@@ -1,6 +1,6 @@
 all: tor.exe
 
-CFLAGS = /O2 /MT /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
+CFLAGS = /Od /Ob /MT /Zi /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
     /I ..\ext /I ..\ext\trunnel /I ..\trunnel
 
 LIBS = ..\..\..\build-alpha\lib\libevent.lib \

@@ -1,6 +1,6 @@
 all: csiphash.lib libed25519_ref10.lib libed25519_donna.lib libkeccak-tiny.lib
 
-CFLAGS = /O2 /MT /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
+CFLAGS = /Od /Ob /MT /Zi /I ..\win32 /I ..\..\..\build-alpha\include /I ..\common \
     /I ..\ext
 
 CSIPHASH_OBJECTS = csiphash.obj
