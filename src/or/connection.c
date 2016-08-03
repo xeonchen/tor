@@ -111,6 +111,29 @@ static smartlist_t *outgoing_addrs = NULL;
     case CONN_TYPE_AP_NATD_LISTENER: \
     case CONN_TYPE_AP_DNS_LISTENER
 
+#ifdef _WIN32
+static void OutputLastError()
+{
+  LPSTR errorText = NULL;
+  FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
+                 NULL,
+                 GetLastError(),
+                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                 (LPSTR)&errorText,
+                 0,
+                 NULL);
+
+  if (errorText != NULL) {
+    log_warn(LD_NET, "NamedPipe creation failed: %s", );
+    LocalFree(errorText);
+    errorText = NULL;
+  } else {
+    log_warn(LD_NET, "NamedPipe creation failed: unknown reason");
+  }
+}
+
+#endif // _WIN32
+
 /**************************************************************/
 
 /**
@@ -1330,36 +1353,38 @@ connection_listener_new(const struct sockaddr *listensockaddr,
 
     tor_addr_make_unspec(&addr);
 
-    if (unlink(address) < 0 && errno != ENOENT) {
-      log_warn(LD_NET, "Could not unlink %s: %s", address,
-                       strerror(errno));
-      goto err;
-    }
+    {
+      char pipeName[1024] = "\\\\.\\pipe\\";
+      strcat(pipeName, address);
 
-    s = tor_open_socket_nonblocking(AF_UNIX, SOCK_STREAM, 0);
-    if (! SOCKET_OK(s)) {
-      int e = tor_socket_errno(s);
-      if (ERRNO_IS_RESOURCE_LIMIT(e)) {
-        warn_too_many_conns();
-      } else {
-        log_warn(LD_NET,"Socket creation failed: %s.", strerror(e));
+      HANDLE hPipe = CreateNamedPipeA(pipeName,
+                                      PIPE_ACCESS_DUPLEX,
+                                      PIPE_TYPE_BYTE | PIPE_REJECT_REMOTE_CLIENTS | PIPE_WAIT,
+                                      PIPE_UNLIMITED_INSTANCES,
+                                      4096,
+                                      4096,
+                                      NMPWAIT_USE_DEFAULT_WAIT,
+                                      NULL);
+
+      if (INVALID_HANDLE_VALUE == hPipe) {
+        OutputLastError();
+        goto err;
       }
-      goto err;
     }
 
-    if (bind(s, listensockaddr,
-             (socklen_t)sizeof(struct sockaddr)) == -1) {
-      log_warn(LD_NET,"Bind to %s failed: %s.", address,
-               tor_socket_strerror(tor_socket_errno(s)));
-      goto err;
-    }
+    // if (bind(s, listensockaddr,
+    //          (socklen_t)sizeof(struct sockaddr)) == -1) {
+    //   log_warn(LD_NET,"Bind to %s failed: %s.", address,
+    //            tor_socket_strerror(tor_socket_errno(s)));
+    //   goto err;
+    // }
 
-    if (listen(s, SOMAXCONN) < 0) {
-      log_warn(LD_NET, "Could not listen on %s: %s", address,
-               tor_socket_strerror(tor_socket_errno(s)));
-      goto err;
-    }
-#endif /* 0 */
+    // if (listen(s, SOMAXCONN) < 0) {
+    //   log_warn(LD_NET, "Could not listen on %s: %s", address,
+    //            tor_socket_strerror(tor_socket_errno(s)));
+    //   goto err;
+    // }
+#endif // xeon
 
 #endif /* HAVE_SYS_UN_H */
   } else {
