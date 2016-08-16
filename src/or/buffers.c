@@ -503,6 +503,14 @@ read_to_chunk_tls(buf_t *buf, chunk_t *chunk, tor_tls_t *tls,
   return read_result;
 }
 
+#ifdef _WIN32
+static inline int
+read_to_chunk_pipe(buf_t *buf, chunk_t *chunk, tor_pipe_t p, size_t at_most)
+{
+  return -1;
+}
+#endif
+
 /** Read from socket <b>s</b>, writing onto end of <b>buf</b>.  Read at most
  * <b>at_most</b> bytes, growing the buffer as necessary.  If recv() returns 0
  * (because of EOF), set *<b>reached_eof</b> to 1 and return 0. Return -1 on
@@ -606,6 +614,16 @@ read_to_buf_tls(tor_tls_t *tls, size_t at_most, buf_t *buf)
   return (int)total_read;
 }
 
+#ifdef _WIN32
+int read_to_buf_pipe(tor_pipe_t p, size_t at_most, buf_t *buf)
+{
+  size_t total_read = 0;
+
+  return (int)total_read;
+}
+#endif
+
+
 /** Helper for flush_buf(): try to write <b>sz</b> bytes from chunk
  * <b>chunk</b> of buffer <b>buf</b> onto socket <b>s</b>.  On success, deduct
  * the bytes written from *<b>buf_flushlen</b>.  Return the number of bytes
@@ -676,6 +694,15 @@ flush_chunk_tls(tor_tls_t *tls, buf_t *buf, chunk_t *chunk,
             r,(int)*buf_flushlen,(int)buf->datalen);
   return r;
 }
+
+#ifdef _WIN32
+static inline int
+flush_chunk_pipe(tor_pipe_t p, buf_t *buf, chunk_t *chunk, size_t sz,
+                 size_t *buf_flushlen)
+{
+  return -1;
+}
+#endif
 
 /** Write data from <b>buf</b> to the socket <b>s</b>.  Write at most
  * <b>sz</b> bytes, decrement *<b>buf_flushlen</b> by
@@ -761,6 +788,13 @@ flush_buf_tls(tor_tls_t *tls, buf_t *buf, size_t flushlen,
   tor_assert(flushed < INT_MAX);
   return (int)flushed;
 }
+
+#ifdef _WIN32
+int flush_buf_pipe(tor_pipe_t p, buf_t *buf, size_t sz, size_t *buf_flushlen)
+{
+  return -1;
+}
+#endif
 
 /** Append <b>string_len</b> bytes from <b>string</b> to the end of
  * <b>buf</b>.

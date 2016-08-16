@@ -32,8 +32,16 @@ int read_to_buf(tor_socket_t s, size_t at_most, buf_t *buf, int *reached_eof,
                 int *socket_error);
 int read_to_buf_tls(tor_tls_t *tls, size_t at_most, buf_t *buf);
 
+#ifdef _WIN32
+int read_to_buf_pipe(tor_pipe_t s, size_t at_most, buf_t *buf);
+#endif
+
 int flush_buf(tor_socket_t s, buf_t *buf, size_t sz, size_t *buf_flushlen);
 int flush_buf_tls(tor_tls_t *tls, buf_t *buf, size_t sz, size_t *buf_flushlen);
+
+#ifdef _WIN32
+int flush_buf_pipe(tor_pipe_t s, buf_t *buf, size_t sz, size_t *buf_flushlen);
+#endif
 
 int write_to_buf(const char *string, size_t string_len, buf_t *buf);
 int write_to_buf_zlib(buf_t *buf, tor_zlib_state_t *state,

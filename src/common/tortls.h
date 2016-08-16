@@ -94,6 +94,9 @@ struct tor_tls_t {
   tor_tls_context_t *context; /** A link to the context object for this tls. */
   SSL *ssl; /**< An OpenSSL SSL object. */
   int socket; /**< The underlying file descriptor for this TLS connection. */
+#ifdef _WIN32
+  HANDLE pipe;
+#endif
   char *address; /**< An address to log when describing this connection. */
   tor_tls_state_bitfield_t state : 3; /**< The current SSL state,
                                        * depending on which operations

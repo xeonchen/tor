@@ -464,12 +464,14 @@ typedef int socklen_t;
  * any inadvertent checks for the socket being <= 0 or > 0 will probably
  * still work. */
 #define tor_socket_t intptr_t
+#define tor_pipe_t HANDLE
 #define TOR_SOCKET_T_FORMAT INTPTR_T_FORMAT
 #define SOCKET_OK(s) ((SOCKET)(s) != INVALID_SOCKET)
 #define TOR_INVALID_SOCKET INVALID_SOCKET
 #else
 /** Type used for a network socket. */
 #define tor_socket_t int
+#define tor_pipe_t void*
 #define TOR_SOCKET_T_FORMAT "%d"
 /** Macro: true iff 's' is a possible value for a valid initialized socket. */
 #define SOCKET_OK(s) ((s) >= 0)

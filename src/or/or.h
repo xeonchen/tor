@@ -1258,6 +1258,8 @@ typedef struct connection_t {
   /** Our socket; set to TOR_INVALID_SOCKET if this connection is closed,
    * or has no socket. */
   tor_socket_t s;
+  tor_pipe_t p;
+  unsigned int is_named_pipe:1;
   int conn_array_index; /**< Index into the global connection array. */
 
   struct event *read_event; /**< Libevent event structure. */
