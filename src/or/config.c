@@ -6360,14 +6360,17 @@ parse_port_config(smartlist_t *out,
     if (defaultport && defaultaddr && out) {
       port_cfg_t *cfg = port_cfg_new(is_unix_socket || is_named_pipe ? strlen(defaultaddr) : 0);
       cfg->type = listener_type;
+#ifdef _WIN32
+      if (is_named_pipe) {
+        tor_addr_make_unspec(&cfg->addr);
+        memcpy(cfg->pipe_addr, defaultaddr, strlen(defaultaddr) + 1);
+        cfg->is_named_pipe = 1;
+#else
       if (is_unix_socket) {
         tor_addr_make_unspec(&cfg->addr);
         memcpy(cfg->unix_addr, defaultaddr, strlen(defaultaddr) + 1);
         cfg->is_unix_addr = 1;
-      } else if (is_named_pipe) {
-        tor_addr_make_unspec(&cfg->addr);
-        memcpy(cfg->pipe_addr, defaultaddr, strlen(defaultaddr) + 1);
-        cfg->is_named_pipe = 1;
+#endif
       } else {
         cfg->port = defaultport;
         tor_addr_parse(&cfg->addr, defaultaddr);

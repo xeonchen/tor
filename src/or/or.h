@@ -3442,8 +3442,11 @@ typedef struct port_cfg_t {
 
   /* Unix sockets only: */
   /** Path for an AF_UNIX address */
-  char unix_addr[FLEXIBLE_ARRAY_MEMBER];
+#ifdef _WIN32
   char pipe_addr[FLEXIBLE_ARRAY_MEMBER];
+#else
+  char unix_addr[FLEXIBLE_ARRAY_MEMBER];
+#endif
 } port_cfg_t;
 
 /** Ordinary configuration line. */

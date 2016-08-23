@@ -307,8 +307,10 @@ entry_connection_new(int type, int socket_family)
     entry_conn->entry_cfg.ipv6_traffic = 1;
   else if (socket_family == AF_UNIX)
     entry_conn->is_socks_socket = 1;
+#ifdef _WIN32
   else if (socket_family == AF_NAMEDPIPE)
     entry_conn->is_named_pipe = 1;
+#endif
   return entry_conn;
 }
 
